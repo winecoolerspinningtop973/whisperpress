@@ -60,14 +60,21 @@ async function startCapture(deviceId) {
   await ctx.audioWorklet.addModule('../common/pcm-worklet.js');
   const src = ctx.createMediaStreamSource(stream);
   const node = new AudioWorkletNode(ctx, 'pcm-capture');
+  // worklet messages arrive every ~8 ms; aggregate to ~70 ms per bar or the
+  // waveform scrolls uncomfortably fast
+  const acc = { sum: 0, n: 0, last: performance.now() };
   node.port.onmessage = (e) => {
     if (!recording) return;
     const f32 = e.data;
     chunks.push(f32);
-    let sum = 0;
-    for (let i = 0; i < f32.length; i++) sum += f32[i] * f32[i];
-    levels.push(Math.min(1, Math.sqrt(sum / f32.length) * 4.5));
-    if (levels.length > 24) levels.shift();
+    for (let i = 0; i < f32.length; i++) acc.sum += f32[i] * f32[i];
+    acc.n += f32.length;
+    const now = performance.now();
+    if (now - acc.last >= 70 && acc.n > 0) {
+      levels.push(Math.min(1, Math.sqrt(acc.sum / acc.n) * 4.5));
+      if (levels.length > 24) levels.shift();
+      acc.sum = 0; acc.n = 0; acc.last = now;
+    }
   };
   src.connect(node);
   // worklet output not connected anywhere: capture only, no monitoring

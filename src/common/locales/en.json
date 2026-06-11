@@ -83,11 +83,13 @@
   "settings.injectType": "Typing each character",
   "settings.injectOff": "Clipboard only (no auto-insert)",
   "settings.restoreClipboard": "Restore clipboard after pasting",
+  "settings.restoreClipboardTip": "Paste mode briefly replaces your clipboard with the transcript. When enabled, your previous clipboard content is put back ~0.35 s after pasting, so nothing you copied gets lost.\nLimitation: only text is restored — images and files are not.\nWhen disabled, the transcript stays on the clipboard for pasting elsewhere.",
   "settings.mic": "Microphone",
   "settings.micDefault": "System default",
   "settings.sounds": "Start/stop sounds",
   "settings.saveNotes": "Save dictations as notes",
   "settings.saveAudio": "Keep audio of dictations",
+  "settings.saveAudioTip": "When enabled, the recording of each dictation is attached to its note so you can replay it later.\nUses disk space (~2 MB per minute). When disabled, only the text is kept.",
 
   "settings.transcription": "Transcription",
   "settings.language": "Spoken language",
@@ -117,6 +119,7 @@
   "settings.storageMoveError": "Could not move the storage folder",
 
   "settings.ai": "AI features (optional)",
+  "settings.aiTip": "Adds AI summaries and ask-the-transcript Q&A. Requires an OpenAI-compatible endpoint:\n• To stay fully offline: install Ollama (ollama.com) and keep the default Base URL\n• Or point it at a cloud service (e.g. OpenAI) with its API key\nNote content is only sent to the endpoint you configure. Off by default; dictation is unaffected.",
   "settings.aiDesc": "Summaries, titles and Q&A use any OpenAI-compatible endpoint. Point it at Ollama or LM Studio on this PC to stay fully offline.",
   "settings.aiEnabled": "Enable AI features",
   "settings.aiKeyPh": "empty for local servers",
@@ -130,6 +133,7 @@
   "settings.launchAtLogin": "Start with Windows",
   "settings.closeToTray": "Keep running in tray when closed",
   "settings.threads": "CPU threads",
+  "settings.threadsTip": "Number of CPU threads the whisper engine uses. 0 = automatic (half your cores, max 8).\nMore threads transcribe faster but load the machine more.\nWith CUDA (GPU) the heavy lifting happens on the graphics card, so this matters little.",
   "settings.threadsAuto": "0 = automatic",
 
   "engine.notInstalled": "Engine not installed",

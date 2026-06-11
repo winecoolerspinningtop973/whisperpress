@@ -409,13 +409,18 @@ $('#btn-meet-start').addEventListener('click', async () => {
     const node = new AudioWorkletNode(ctx, 'pcm-capture');
     meeting.chunks = [];
     meeting.levels = new Array(28).fill(0);
+    const acc = { sum: 0, n: 0, last: performance.now() };
     node.port.onmessage = (e) => {
       if (!meeting.active) return;
       meeting.chunks.push(e.data);
-      let sum = 0;
-      for (let i = 0; i < e.data.length; i++) sum += e.data[i] * e.data[i];
-      meeting.levels.push(Math.min(1, Math.sqrt(sum / e.data.length) * 4));
-      if (meeting.levels.length > 28) meeting.levels.shift();
+      for (let i = 0; i < e.data.length; i++) acc.sum += e.data[i] * e.data[i];
+      acc.n += e.data.length;
+      const now = performance.now();
+      if (now - acc.last >= 70 && acc.n > 0) {
+        meeting.levels.push(Math.min(1, Math.sqrt(acc.sum / acc.n) * 4));
+        if (meeting.levels.length > 28) meeting.levels.shift();
+        acc.sum = 0; acc.n = 0; acc.last = now;
+      }
     };
     if (sys.getAudioTracks().length) ctx.createMediaStreamSource(sys).connect(node);
     if ($('#meet-mic').checked) {
