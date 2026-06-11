@@ -76,7 +76,7 @@ function renderFlavorRow() {
   const flavors = engineState.flavors || {};
   const labels = { cpu: t('settings.flavorCpu'), cuda: t('settings.flavorCuda') };
   for (const opt of sel.options) {
-    opt.textContent = labels[opt.value] + (flavors[opt.value] ? ` — ✓ ${t('settings.installed')}` : '');
+    opt.textContent = labels[opt.value];
   }
   const selected = sel.value || settings.engineFlavor;
   const installed = !!flavors[selected];
