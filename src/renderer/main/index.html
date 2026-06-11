@@ -47,6 +47,13 @@
       <div class="list-pane">
         <div class="list-head">
           <input id="search" type="text" data-i18n-ph="notes.search" />
+          <div id="bulk-bar" hidden>
+            <span id="bulk-count"></span>
+            <span class="spacer"></span>
+            <button id="bulk-all" class="btn small-btn" data-i18n="notes.selectAll"></button>
+            <button id="bulk-delete" class="btn small-btn danger" data-i18n="notes.deleteSelected"></button>
+            <button id="bulk-cancel" class="btn small-btn" data-i18n="notes.clearSelection"></button>
+          </div>
         </div>
         <div id="note-list" class="note-list"></div>
         <div id="notes-empty" class="muted center" hidden data-i18n="notes.empty"></div>
@@ -214,6 +221,11 @@
           <span id="engine-status-text" class="mono small"></span>
         </div>
         <div class="row">
+          <label data-i18n="settings.hwTitle"></label>
+          <span id="hw-line" class="small muted" style="flex:1; min-width:0;"></span>
+          <button id="btn-hw-apply" class="btn primary" hidden data-i18n="settings.hwApply"></button>
+        </div>
+        <div class="row">
           <label data-i18n="settings.flavor"></label>
           <select id="set-engineFlavor">
             <option value="cpu"></option>
@@ -308,6 +320,7 @@
             <div class="ob-line"><span data-i18n="ob.engine"></span><span id="ob-engine-state">…</span></div>
             <div id="ob-engine-progress" class="progress" hidden><div class="bar"></div><span class="pct"></span></div>
           </div>
+          <p id="ob-hw" class="muted small" style="text-align:left; margin: 6px 0 0;"></p>
           <div id="ob-models" class="model-cards"></div>
           <button class="btn primary big" id="ob-next-2" disabled data-i18n="ob.next"></button>
         </div>

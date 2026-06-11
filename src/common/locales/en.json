@@ -27,6 +27,11 @@
   "notes.placeholder1": "Hold {key} in any app and speak",
   "notes.placeholder2": "Your words are typed where your cursor is, and saved here.",
   "notes.untitled": "Untitled",
+  "notes.selected": "{n} selected",
+  "notes.selectAll": "Select all",
+  "notes.deleteSelected": "Delete selected",
+  "notes.clearSelection": "Clear",
+  "notes.deleteManyConfirm": "Permanently delete the {n} selected notes?",
 
   "note.copy": "Copy",
   "note.copied": "Copied ✓",
@@ -105,6 +110,9 @@
 
   "settings.models": "Models & engine",
   "settings.engineStatus": "Engine status",
+  "settings.hwTitle": "Hardware recommendation",
+  "settings.hwApply": "Apply",
+  "settings.hwError": "Could not apply the recommendation",
   "settings.flavor": "Compute",
   "settings.flavorCpu": "CPU (works everywhere)",
   "settings.flavorCuda": "NVIDIA GPU (CUDA)",

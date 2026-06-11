@@ -143,6 +143,7 @@ function bootstrap() {
   ipcMain.handle('engine:deleteModel', (e, id) => { engine.deleteModel(id); return engine.getState(); });
   ipcMain.handle('engine:cancelDownload', (e, key) => engine.cancelDownload(key));
   ipcMain.handle('engine:restart', () => engine.start());
+  ipcMain.handle('engine:hw', () => engine.detectHardware());
   ipcMain.handle('storage:choose', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog(windows.main, {
       properties: ['openDirectory', 'createDirectory'],
@@ -163,6 +164,9 @@ function bootstrap() {
   ipcMain.handle('notes:get', (e, id) => notes.get(id));
   ipcMain.handle('notes:update', (e, { id, patch }) => notes.update(id, patch));
   ipcMain.handle('notes:delete', (e, id) => notes.remove(id));
+  ipcMain.handle('notes:deleteMany', (e, ids) => {
+    for (const id of Array.isArray(ids) ? ids : []) notes.remove(id);
+  });
   ipcMain.handle('notes:audio', (e, id) => {
     const p = notes.audioPath(notes.get(id));
     if (!p || !fs.existsSync(p)) return null;

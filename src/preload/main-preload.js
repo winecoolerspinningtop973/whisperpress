@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('wp', {
   deleteModel: (id) => ipcRenderer.invoke('engine:deleteModel', id),
   cancelDownload: (key) => ipcRenderer.invoke('engine:cancelDownload', key),
   restartEngine: () => ipcRenderer.invoke('engine:restart'),
+  hwRecommend: () => ipcRenderer.invoke('engine:hw'),
   chooseStorage: () => ipcRenderer.invoke('storage:choose'),
   setStorage: (dir) => ipcRenderer.invoke('storage:set', dir),
   openStorage: () => ipcRenderer.invoke('storage:open'),
@@ -29,6 +30,7 @@ contextBridge.exposeInMainWorld('wp', {
   getNote: (id) => ipcRenderer.invoke('notes:get', id),
   updateNote: (id, patch) => ipcRenderer.invoke('notes:update', { id, patch }),
   deleteNote: (id) => ipcRenderer.invoke('notes:delete', id),
+  deleteNotes: (ids) => ipcRenderer.invoke('notes:deleteMany', ids),
   exportNote: (id, format) => ipcRenderer.invoke('notes:export', { id, format }),
   noteAudio: (id) => ipcRenderer.invoke('notes:audio', id),
 

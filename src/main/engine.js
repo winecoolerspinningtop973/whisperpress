@@ -151,6 +151,41 @@ class Engine extends EventEmitter {
     if (ac) ac.abort();
   }
 
+  // Detect CPU/RAM/NVIDIA GPU and recommend a flavor + model.
+  async detectHardware() {
+    const cpus = os.cpus();
+    const info = {
+      cpuName: ((cpus[0] && cpus[0].model) || 'CPU').replace(/\s+/g, ' ').trim(),
+      cores: cpus.length,
+      ramGB: Math.round(os.totalmem() / 1073741824),
+      gpu: null,
+    };
+    try {
+      const out = await new Promise((resolve, reject) => {
+        const p = spawn('nvidia-smi', ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'], { windowsHide: true });
+        let s = '';
+        p.stdout.on('data', (d) => { s += d; });
+        p.on('error', reject);
+        p.on('exit', (c) => (c === 0 ? resolve(s) : reject(new Error(`nvidia-smi exit ${c}`))));
+      });
+      const [name, mem] = out.trim().split('\n')[0].split(',').map((x) => x.trim());
+      if (name) info.gpu = { name, vramMB: Number(mem) || 0 };
+    } catch { /* no NVIDIA GPU / driver */ }
+
+    let flavor = 'cpu';
+    let model = 'base';
+    if (info.gpu && info.gpu.vramMB >= 3000) {
+      flavor = 'cuda';
+      model = 'large-v3-turbo-q5_0';
+    } else if (info.ramGB >= 16 && info.cores >= 8) {
+      model = 'large-v3-turbo-q5_0';
+    } else if (info.ramGB >= 8) {
+      model = 'small';
+    }
+    info.recommend = { flavor, model };
+    return info;
+  }
+
   // Move engine + models to a new folder and use it from now on.
   async setStorageDir(newDir) {
     const oldRoot = this.dataRoot;

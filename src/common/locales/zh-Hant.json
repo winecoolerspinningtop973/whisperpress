@@ -27,6 +27,11 @@
   "notes.placeholder1": "在任何應用程式按住 {key} 開始說話",
   "notes.placeholder2": "文字會直接打在游標處，同時保存在這裡。",
   "notes.untitled": "未命名",
+  "notes.selected": "已選 {n} 則",
+  "notes.selectAll": "全選",
+  "notes.deleteSelected": "刪除所選",
+  "notes.clearSelection": "取消",
+  "notes.deleteManyConfirm": "確定要永久刪除選取的 {n} 則筆記嗎？",
 
   "note.copy": "複製",
   "note.copied": "已複製 ✓",
@@ -105,6 +110,9 @@
 
   "settings.models": "模型與引擎",
   "settings.engineStatus": "引擎狀態",
+  "settings.hwTitle": "硬體建議",
+  "settings.hwApply": "套用建議",
+  "settings.hwError": "套用硬體建議失敗",
   "settings.flavor": "運算方式",
   "settings.flavorCpu": "CPU（所有電腦皆可）",
   "settings.flavorCuda": "NVIDIA GPU（CUDA）",

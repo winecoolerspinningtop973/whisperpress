@@ -27,6 +27,11 @@
   "notes.placeholder1": "どのアプリでも {key} を長押しして話す",
   "notes.placeholder2": "文字はカーソル位置に入力され、ここにも保存されます。",
   "notes.untitled": "無題",
+  "notes.selected": "{n} 件選択中",
+  "notes.selectAll": "すべて選択",
+  "notes.deleteSelected": "選択を削除",
+  "notes.clearSelection": "解除",
+  "notes.deleteManyConfirm": "選択した {n} 件のノートを完全に削除しますか？",
 
   "note.copy": "コピー",
   "note.copied": "コピーしました ✓",
@@ -105,6 +110,9 @@
 
   "settings.models": "モデルとエンジン",
   "settings.engineStatus": "エンジンの状態",
+  "settings.hwTitle": "ハードウェア推奨",
+  "settings.hwApply": "適用",
+  "settings.hwError": "推奨設定の適用に失敗しました",
   "settings.flavor": "演算方式",
   "settings.flavorCpu": "CPU（どの PC でも動作）",
   "settings.flavorCuda": "NVIDIA GPU（CUDA）",

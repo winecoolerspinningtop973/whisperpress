@@ -7,6 +7,7 @@ let settings = {};
 let engineState = { models: [] };
 let notesList = [];
 let currentNoteId = null;
+const selectedNotes = new Set();
 let currentAudioUrl = null;
 const jobs = new Map(); // id -> {id, name, source, phase, pct, lines: [], noteId}
 const chatHistories = new Map(); // noteId -> [{role, content}]
@@ -69,6 +70,7 @@ function renderEngineStatus() {
   $('#storage-path').textContent = engineState.storageDir || '';
   $('#storage-path').title = engineState.storageDir || '';
   renderFlavorRow();
+  updateHwApply();
 }
 
 // compute-flavor row: show per-flavor install state, only offer install when missing
@@ -111,20 +113,62 @@ function renderNoteList() {
   list.innerHTML = '';
   const filtered = notesList.filter((n) => !q || (n.title || '').toLowerCase().includes(q) || (n.snippet || '').toLowerCase().includes(q));
   $('#notes-empty').hidden = filtered.length > 0;
+  list.classList.toggle('selecting', selectedNotes.size > 0);
   const srcIcon = { dictation: '🎙', import: '📂', meeting: '🖥' };
   for (const n of filtered) {
     const el = document.createElement('div');
-    el.className = 'note-item' + (n.id === currentNoteId ? ' active' : '');
+    el.className = 'note-item' + (n.id === currentNoteId ? ' active' : '') + (selectedNotes.has(n.id) ? ' checked' : '');
     el.innerHTML = `
-      <div class="ni-title"></div>
-      <div class="ni-snippet"></div>
-      <div class="ni-meta"><span>${srcIcon[n.source] || ''} ${fmtDate(n.createdAt)}</span><span>${fmtDur(n.durationMs)}</span>${n.hasSummary ? '<span>✦</span>' : ''}</div>`;
+      <input type="checkbox" class="ni-check" ${selectedNotes.has(n.id) ? 'checked' : ''} />
+      <div class="ni-body">
+        <div class="ni-title"></div>
+        <div class="ni-snippet"></div>
+        <div class="ni-meta"><span>${srcIcon[n.source] || ''} ${fmtDate(n.createdAt)}</span><span>${fmtDur(n.durationMs)}</span>${n.hasSummary ? '<span>✦</span>' : ''}</div>
+      </div>`;
     el.querySelector('.ni-title').textContent = n.title || t('notes.untitled');
     el.querySelector('.ni-snippet').textContent = n.snippet || '';
-    el.addEventListener('click', () => openNote(n.id));
+    el.querySelector('.ni-check').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleNoteSelection(n.id);
+    });
+    el.addEventListener('click', (e) => {
+      if (e.ctrlKey || e.metaKey) { toggleNoteSelection(n.id); return; }
+      openNote(n.id);
+    });
     list.appendChild(el);
   }
+  updateBulkBar(filtered);
 }
+
+function toggleNoteSelection(id) {
+  if (selectedNotes.has(id)) selectedNotes.delete(id);
+  else selectedNotes.add(id);
+  renderNoteList();
+}
+
+function updateBulkBar() {
+  const bar = $('#bulk-bar');
+  bar.hidden = selectedNotes.size === 0;
+  if (selectedNotes.size) $('#bulk-count').textContent = t('notes.selected', { n: selectedNotes.size });
+}
+
+$('#bulk-cancel').addEventListener('click', () => { selectedNotes.clear(); renderNoteList(); });
+$('#bulk-all').addEventListener('click', () => {
+  const q = $('#search').value.trim().toLowerCase();
+  notesList
+    .filter((n) => !q || (n.title || '').toLowerCase().includes(q) || (n.snippet || '').toLowerCase().includes(q))
+    .forEach((n) => selectedNotes.add(n.id));
+  renderNoteList();
+});
+$('#bulk-delete').addEventListener('click', async () => {
+  if (!selectedNotes.size) return;
+  if (!confirm(t('notes.deleteManyConfirm', { n: selectedNotes.size }))) return;
+  const ids = [...selectedNotes];
+  selectedNotes.clear();
+  await wp.deleteNotes(ids);
+  if (ids.includes(currentNoteId)) { currentNoteId = null; renderNoteDetail(null); }
+  await refreshNotes();
+});
 
 async function openNote(id) {
   currentNoteId = id;
@@ -619,6 +663,46 @@ $('#btn-storage-change').addEventListener('click', async () => {
 });
 $('#btn-storage-open').addEventListener('click', () => wp.openStorage());
 
+// ---------------- hardware recommendation ----------------
+let hwInfo = null;
+async function loadHwRecommendation() {
+  try { hwInfo = await wp.hwRecommend(); } catch { return; }
+  const r = hwInfo.recommend;
+  const flavorLabel = r.flavor === 'cuda' ? t('settings.flavorCuda') : t('settings.flavorCpu');
+  const gpuPart = hwInfo.gpu ? ` · ${hwInfo.gpu.name}（${Math.round(hwInfo.gpu.vramMB / 1024)} GB）` : '';
+  const line = `${hwInfo.cpuName} · ${hwInfo.ramGB} GB RAM${gpuPart}　→　${flavorLabel} ＋ ${r.model}`;
+  $('#hw-line').textContent = line;
+  $('#hw-line').title = line;
+  $('#ob-hw').textContent = `💻 ${line}`;
+  updateHwApply();
+}
+function updateHwApply() {
+  if (!hwInfo) return;
+  const r = hwInfo.recommend;
+  $('#btn-hw-apply').hidden = settings.engineFlavor === r.flavor && settings.model === r.model;
+}
+$('#btn-hw-apply').addEventListener('click', async () => {
+  if (!hwInfo) return;
+  const r = hwInfo.recommend;
+  const btn = $('#btn-hw-apply');
+  btn.disabled = true;
+  try {
+    settings = await wp.setSettings({ engineFlavor: r.flavor });
+    let st = await wp.engineState();
+    if (!st.flavors[r.flavor]) engineState = await wp.installEngine(r.flavor);
+    st = await wp.engineState();
+    const m = st.models.find((x) => x.id === r.model);
+    if (m && !m.installed) engineState = await wp.downloadModel(r.model);
+    settings = await wp.setSettings({ model: r.model });
+    engineState = await wp.engineState();
+  } catch (err) {
+    alert(t('settings.hwError') + '\n' + String(err.message || err));
+  }
+  btn.disabled = false;
+  renderEngineStatus();
+  renderModelCards();
+});
+
 function renderModelCards() {
   for (const { wrapSel, subset } of [
     { wrapSel: '#model-cards', subset: null },
@@ -791,6 +875,7 @@ async function reloadDict() {
   renderEngineStatus();
   renderModelCards();
   await refreshNotes();
+  loadHwRecommendation();
   if (!boot.hotkeysAvailable) {
     setTimeout(() => alert(t('app.hotkeyUnavailable')), 800);
   }
