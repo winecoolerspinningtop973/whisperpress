@@ -13,12 +13,15 @@ using System;
 using System.Runtime.InteropServices;
 public class WPInput {
   [StructLayout(LayoutKind.Sequential)] public struct KEYBDINPUT { public ushort wVk; public ushort wScan; public uint dwFlags; public uint time; public IntPtr dwExtraInfo; }
-  [StructLayout(LayoutKind.Explicit)] public struct InputUnion { [FieldOffset(0)] public KEYBDINPUT ki; }
+  [StructLayout(LayoutKind.Sequential)] public struct MOUSEINPUT { public int dx; public int dy; public uint mouseData; public uint dwFlags; public uint time; public IntPtr dwExtraInfo; }
+  // MOUSEINPUT must be part of the union: without it sizeof(INPUT) is 32 instead of
+  // the 40 Windows expects on x64, and SendInput rejects every event with return 0.
+  [StructLayout(LayoutKind.Explicit)] public struct InputUnion { [FieldOffset(0)] public KEYBDINPUT ki; [FieldOffset(0)] public MOUSEINPUT mi; }
   [StructLayout(LayoutKind.Sequential)] public struct INPUT { public uint type; public InputUnion U; }
   [DllImport("user32.dll", SetLastError=true)] public static extern uint SendInput(uint n, INPUT[] inputs, int size);
   static INPUT Mk(ushort vk, ushort scan, uint flags) { var i = new INPUT(); i.type = 1; i.U.ki.wVk = vk; i.U.ki.wScan = scan; i.U.ki.dwFlags = flags; return i; }
-  public static void Key(ushort vk, bool up) { var a = new INPUT[]{ Mk(vk, 0, up ? 2u : 0u) }; SendInput(1, a, Marshal.SizeOf(typeof(INPUT))); }
-  public static void Chr(ushort cu) { var a = new INPUT[]{ Mk(0, cu, 4u), Mk(0, cu, 6u) }; SendInput(2, a, Marshal.SizeOf(typeof(INPUT))); }
+  public static uint Key(ushort vk, bool up) { var a = new INPUT[]{ Mk(vk, 0, up ? 2u : 0u) }; return SendInput(1, a, Marshal.SizeOf(typeof(INPUT))); }
+  public static uint Chr(ushort cu) { var a = new INPUT[]{ Mk(0, cu, 4u), Mk(0, cu, 6u) }; return SendInput(2, a, Marshal.SizeOf(typeof(INPUT))); }
 }
 "@
 while ($true) {
@@ -28,23 +31,27 @@ while ($true) {
   $typeIdx = $line.IndexOf('TYPE ')
   try {
     if ($line.Contains('PASTE')) {
-      [WPInput]::Key(0x11, $false)   # Ctrl down
+      $sent = [uint32]0
+      $sent += [WPInput]::Key(0x11, $false)   # Ctrl down
       Start-Sleep -Milliseconds 15
-      [WPInput]::Key(0x56, $false)   # V down
+      $sent += [WPInput]::Key(0x56, $false)   # V down
       Start-Sleep -Milliseconds 15
-      [WPInput]::Key(0x56, $true)
-      [WPInput]::Key(0x11, $true)
-      [Console]::Out.WriteLine('OK')
+      $sent += [WPInput]::Key(0x56, $true)
+      $sent += [WPInput]::Key(0x11, $true)
+      if ($sent -eq 4) { [Console]::Out.WriteLine('OK') }
+      else { [Console]::Out.WriteLine("ERR SendInput injected $sent/4 events") }
     } elseif ($typeIdx -ge 0) {
       $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($line.Substring($typeIdx + 5).Trim()))
+      $fail = [uint32]0
       foreach ($ch in $text.ToCharArray()) {
         $cu = [uint16][char]$ch
         if ($cu -eq 13) { continue }
-        if ($cu -eq 10) { [WPInput]::Key(0x0D, $false); [WPInput]::Key(0x0D, $true) }
-        else { [WPInput]::Chr($cu) }
+        if ($cu -eq 10) { if (([WPInput]::Key(0x0D, $false) + [WPInput]::Key(0x0D, $true)) -lt 2) { $fail++ } }
+        elseif ([WPInput]::Chr($cu) -lt 2) { $fail++ }
         Start-Sleep -Milliseconds 2
       }
-      [Console]::Out.WriteLine('OK')
+      if ($fail -eq 0) { [Console]::Out.WriteLine('OK') }
+      else { [Console]::Out.WriteLine("ERR SendInput dropped $fail chars") }
     } else {
       [Console]::Out.WriteLine('ERR unknown command')
     }
