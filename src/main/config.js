@@ -12,6 +12,7 @@ const DEFAULTS = {
   injectMode: 'paste', // 'paste' | 'type' | 'off'
   restoreClipboard: true,
   language: 'auto', // whisper language code or 'auto'
+  chineseVariant: 'auto', // 'auto' | 'traditional' | 'simplified' — deterministic OpenCC post-conversion
   translate: false, // translate to English
   model: '', // e.g. 'large-v3-turbo-q5_0'
   micDeviceId: 'default',

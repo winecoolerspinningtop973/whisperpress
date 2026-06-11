@@ -33,6 +33,7 @@ Press and hold a hotkey (default **F9**), talk, release — your speech is trans
 | 📂 **Audio file import** | MP3, M4A, WAV, OGG, FLAC… with live streaming output while transcribing. |
 | 🖥 **Meeting recording** | Captures system audio (Teams / Meet / Zoom) + your mic, transcribes locally. |
 | 🌍 **100+ languages** | Whisper multilingual models, auto-detect or fixed language, optional translate-to-English. |
+| 🈶 **Traditional/Simplified Chinese** | Deterministic OpenCC conversion of Chinese output — no model roulette. |
 | ✦ **AI summaries & Q&A** | Optional. Point it at any OpenAI-compatible endpoint — e.g. local [Ollama](https://ollama.com) to stay offline. |
 | ⏱ **Timestamped export** | Export notes as `.txt`, `.md`, or `.srt` subtitles. |
 | 🔒 **Private by architecture** | Models run on your CPU/GPU via whisper.cpp. Notes are plain JSON on your disk. |
@@ -74,7 +75,7 @@ NVIDIA GPU? Switch *Settings → Compute* to **CUDA** for a much faster engine b
 
 ## Tips
 
-- **Traditional Chinese output**: set the vocabulary hint to something like `以下是繁體中文的逐字稿：` (done automatically when the UI language is 繁體中文).
+- **Traditional Chinese output**: pick *Settings → Transcription → Chinese output script → Force Traditional* for a guaranteed script (OpenCC); a vocabulary hint like `以下是繁體中文的逐字稿：` further improves word choice.
 - **Tap to lock**: quick-tap the hotkey to keep recording hands-free; press it again to finish. `Esc` cancels.
 - **AI features**: install [Ollama](https://ollama.com), `ollama pull qwen3:4b`, then enable AI in Settings with the default base URL `http://localhost:11434/v1`.
 

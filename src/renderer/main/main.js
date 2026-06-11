@@ -504,6 +504,7 @@ function fillSettingsForm() {
   $('#set-saveDictationNotes').checked = settings.saveDictationNotes;
   $('#set-saveAudio').checked = settings.saveAudio;
   $('#set-translate').checked = settings.translate;
+  $('#set-chineseVariant').value = settings.chineseVariant || 'auto';
   $('#set-initialPrompt').value = settings.initialPrompt;
   $('#set-engineFlavor').value = settings.engineFlavor;
   $('#set-locale').value = settings.locale;
@@ -534,6 +535,7 @@ bindSimple('#set-sounds', 'sounds');
 bindSimple('#set-saveDictationNotes', 'saveDictationNotes');
 bindSimple('#set-saveAudio', 'saveAudio');
 bindSimple('#set-language', 'language');
+bindSimple('#set-chineseVariant', 'chineseVariant');
 bindSimple('#set-translate', 'translate');
 bindSimple('#set-initialPrompt', 'initialPrompt');
 bindSimple('#set-engineFlavor', 'engineFlavor');
@@ -749,6 +751,7 @@ async function startOnboarding() {
     const patch = { onboarded: true };
     const loc = dict['__locale'] || '';
     if (loc === 'zh-Hant' && !settings.initialPrompt) patch.initialPrompt = '以下是繁體中文的逐字稿：';
+    if (loc === 'zh-Hant' && settings.chineseVariant === 'auto') patch.chineseVariant = 'traditional';
     settings = await wp.setSettings(patch);
     await wp.restartEngine();
     showView('notes');

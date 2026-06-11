@@ -28,6 +28,28 @@ const MODELS = [
   { id: 'large-v3-q5_0', sizeMB: 1080, ram: '~2.5 GB', tier: 'max-quality' },
 ];
 
+// Deterministic Traditional/Simplified conversion (the initial prompt only *biases*
+// the script whisper picks; OpenCC guarantees it).
+const occConverters = {};
+function convertChinese(text, variant) {
+  if (!text || variant === 'auto') return text;
+  try {
+    if (!occConverters[variant]) {
+      const OpenCC = require('opencc-js');
+      occConverters[variant] = variant === 'traditional'
+        ? OpenCC.Converter({ from: 'cn', to: 'twp' })
+        : OpenCC.Converter({ from: 'twp', to: 'cn' });
+    }
+    return occConverters[variant](text);
+  } catch (e) {
+    console.error('opencc failed', e.message);
+    return text;
+  }
+}
+function isChineseLang(lang) { return /^(zh|chinese)/i.test(lang || ''); }
+// for streamed segments before the detected language is known: hanzi but no kana
+function looksChinese(text) { return /[一-鿿]/.test(text) && !/[぀-ヿ]/.test(text); }
+
 class Engine extends EventEmitter {
   constructor() {
     super();
@@ -300,10 +322,12 @@ class Engine extends EventEmitter {
     if (!res.ok) throw new Error(`inference failed: HTTP ${res.status} ${(await res.text()).slice(0, 300)}`);
     const j = await res.json();
     if (j.error) throw new Error(`inference failed: ${j.error}`);
+    const language = j.language || lang;
+    const variant = isChineseLang(language) ? config.get().chineseVariant : 'auto';
     const segments = Array.isArray(j.segments)
-      ? j.segments.map((s) => ({ t0: Math.round((s.start || 0) * 1000), t1: Math.round((s.end || 0) * 1000), text: (s.text || '').trim() }))
+      ? j.segments.map((s) => ({ t0: Math.round((s.start || 0) * 1000), t1: Math.round((s.end || 0) * 1000), text: convertChinese((s.text || '').trim(), variant) }))
       : null;
-    return { text: (j.text || '').trim(), segments, language: j.language || lang };
+    return { text: convertChinese((j.text || '').trim(), variant), segments, language };
   }
 
   // ---------- transcription (long files, streaming CLI) ----------
@@ -348,7 +372,12 @@ class Engine extends EventEmitter {
           if (m && onSegment) {
             const t0 = (+m[1] * 3600 + +m[2] * 60 + +m[3]) * 1000 + +m[4];
             const t1 = (+m[5] * 3600 + +m[6] * 60 + +m[7]) * 1000 + +m[8];
-            onSegment({ t0, t1, text: m[9].trim() });
+            let text = m[9].trim();
+            // detected language is only known at the end; use a heuristic for live output
+            if (lang === 'zh' || (lang === 'auto' && looksChinese(text))) {
+              text = convertChinese(text, config.get().chineseVariant);
+            }
+            onSegment({ t0, t1, text });
           } else {
             scanProgress(line);
           }
@@ -367,15 +396,17 @@ class Engine extends EventEmitter {
         try {
           const j = JSON.parse(fs.readFileSync(`${outBase}.json`, 'utf8'));
           try { fs.unlinkSync(`${outBase}.json`); } catch { /* ignore */ }
+          const language = (j.result && j.result.language) || lang;
+          const variant = isChineseLang(language) ? config.get().chineseVariant : 'auto';
           const segments = (j.transcription || []).map((s) => ({
             t0: s.offsets ? s.offsets.from : 0,
             t1: s.offsets ? s.offsets.to : 0,
-            text: (s.text || '').trim(),
+            text: convertChinese((s.text || '').trim(), variant),
           }));
           resolve({
             text: segments.map((s) => s.text).join('\n').trim(),
             segments,
-            language: (j.result && j.result.language) || lang,
+            language,
           });
         } catch (e) { reject(e); }
       });
