@@ -6,7 +6,11 @@
   "main": "src/main/main.js",
   "author": "WhisperPress contributors",
   "license": "MIT",
-  "homepage": "https://github.com/whisperpress/whisperpress",
+  "homepage": "https://github.com/b84330808/whisperpress",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/b84330808/whisperpress.git"
+  },
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/gen-icons.js",
