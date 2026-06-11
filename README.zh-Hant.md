@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  繁體中文 · <a href="README.md">English</a>
+  繁體中文 · <a href="README.md">English</a> · <a href="README.ja.md">日本語</a>
 </p>
 
 ---
