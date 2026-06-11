@@ -33,6 +33,7 @@ const LANG_NAMES = {
 function applyI18n() {
   $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+  $$('[data-i18n-tip]').forEach((el) => { el.dataset.tip = t(el.dataset.i18nTip); });
 }
 
 function fmtDate(ts) {

@@ -97,8 +97,9 @@
   "settings.variantTraditional": "Force Traditional (繁體)",
   "settings.variantSimplified": "Force Simplified (简体)",
   "settings.translate": "Translate to English",
-  "settings.prompt": "Vocabulary hint (initial prompt) — names, jargon, or a sample sentence in your preferred style",
-  "settings.promptPh": "e.g. 以下是繁體中文的逐字稿：  /  Names: Kubernetes, PostgreSQL, Claude",
+  "settings.prompt": "Initial prompt",
+  "settings.promptTip": "Fake context fed to Whisper before decoding — output tends to continue its wording and style:\n• Proper nouns — list names, companies and jargon you say often; similar-sounding speech resolves to them\n• Style — include a sample sentence in your preferred style\n• A punctuated prompt also encourages punctuated output\nNote: this is a probabilistic bias, not a guarantee; for Traditional/Simplified use the Chinese output script setting above.",
+  "settings.promptPh": "e.g. Names: WhisperPress, Kubernetes, PostgreSQL, commit",
 
   "settings.models": "Models & engine",
   "settings.engineStatus": "Engine status",
