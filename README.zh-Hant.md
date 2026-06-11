@@ -13,6 +13,10 @@
   繁體中文 · <a href="README.md">English</a> · <a href="README.ja.md">日本語</a>
 </p>
 
+<p align="center">
+  <img src="assets/demo.gif" width="850" alt="WhisperPress 示範 — 中英日三語聽寫直接打進記事本" />
+</p>
+
 ---
 
 ## 為什麼選 WhisperPress？

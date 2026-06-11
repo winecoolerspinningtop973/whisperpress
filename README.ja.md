@@ -13,6 +13,10 @@
   <a href="README.zh-Hant.md">繁體中文</a> · <a href="README.md">English</a> · 日本語
 </p>
 
+<p align="center">
+  <img src="assets/demo.gif" width="850" alt="WhisperPress デモ — 中国語・英語・日本語をメモ帳に直接音声入力" />
+</p>
+
 ---
 
 ## WhisperPress とは？

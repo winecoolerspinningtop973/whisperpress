@@ -13,6 +13,10 @@
   <a href="README.zh-Hant.md">繁體中文</a> · English · <a href="README.ja.md">日本語</a>
 </p>
 
+<p align="center">
+  <img src="assets/demo.gif" width="850" alt="WhisperPress demo — dictating Chinese, English and Japanese into Notepad" />
+</p>
+
 ---
 
 ## Why WhisperPress?
