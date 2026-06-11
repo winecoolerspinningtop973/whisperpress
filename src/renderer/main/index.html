@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src blob:; img-src 'self' data:" />
+<title>WhisperPress</title>
+<link rel="stylesheet" href="main.css" />
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand">
+      <img src="../../../assets/icon.png" alt="" width="30" height="30" />
+      <span>WhisperPress</span>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-view="notes">
+        <svg viewBox="0 0 24 24"><path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm3 5h8M8 11h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span data-i18n="nav.notes"></span>
+      </button>
+      <button class="nav-btn" data-view="import">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav.import"></span>
+      </button>
+      <button class="nav-btn" data-view="meeting">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 10 5-3v10l-5-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav.meeting"></span>
+      </button>
+      <button class="nav-btn" data-view="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.8v3m0 12.4v3M21.2 12h-3M5.8 12h-3m13.7-6.5-2.1 2.1M7.6 16.4l-2.1 2.1m13 0-2.1-2.1M7.6 7.6 5.5 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span data-i18n="nav.settings"></span>
+      </button>
+    </nav>
+    <div class="side-footer">
+      <div id="engine-pill" class="engine-pill">
+        <span id="engine-dot" class="dot"></span>
+        <span id="engine-label">—</span>
+      </div>
+      <div id="hotkey-hint" class="hotkey-hint"></div>
+      <div id="version" class="version"></div>
+    </div>
+  </aside>
+
+  <main id="content">
+    <!-- ============ NOTES ============ -->
+    <section id="view-notes" class="view active">
+      <div class="list-pane">
+        <div class="list-head">
+          <input id="search" type="text" data-i18n-ph="notes.search" />
+        </div>
+        <div id="note-list" class="note-list"></div>
+        <div id="notes-empty" class="muted center" hidden data-i18n="notes.empty"></div>
+      </div>
+      <div class="detail-pane">
+        <div id="note-placeholder" class="placeholder">
+          <div class="ph-icon">🎙️</div>
+          <p id="ph-line1"></p>
+          <p class="muted" data-i18n="notes.placeholder2"></p>
+        </div>
+        <div id="note-detail" hidden>
+          <input id="note-title" class="note-title" />
+          <div id="note-meta" class="note-meta"></div>
+          <div class="toolbar">
+            <button id="btn-copy" class="btn" data-i18n="note.copy"></button>
+            <div class="dropdown">
+              <button id="btn-export" class="btn" data-i18n="note.export"></button>
+              <div class="menu" id="export-menu" hidden>
+                <button data-fmt="txt">.txt</button>
+                <button data-fmt="md">.md</button>
+                <button data-fmt="srt">.srt</button>
+              </div>
+            </div>
+            <button id="btn-summarize" class="btn" data-i18n="note.aiSummary"></button>
+            <button id="btn-chat" class="btn" data-i18n="note.aiChat"></button>
+            <span class="spacer"></span>
+            <button id="btn-delete" class="btn danger" data-i18n="note.delete"></button>
+          </div>
+          <div id="note-summary" class="summary-box" hidden>
+            <div class="summary-head" data-i18n="note.summary"></div>
+            <div id="summary-text"></div>
+          </div>
+          <audio id="note-audio" controls hidden></audio>
+          <textarea id="note-text" spellcheck="false"></textarea>
+          <div id="chat-panel" hidden>
+            <div id="chat-messages"></div>
+            <div class="chat-input-row">
+              <input id="chat-input" type="text" data-i18n-ph="chat.placeholder" />
+              <button id="chat-send" class="btn primary" data-i18n="chat.send"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ IMPORT ============ -->
+    <section id="view-import" class="view">
+      <h1 data-i18n="import.title"></h1>
+      <p class="muted" data-i18n="import.desc"></p>
+      <div id="dropzone">
+        <div class="dz-icon">📂</div>
+        <p data-i18n="import.drop"></p>
+        <button id="btn-browse" class="btn primary" data-i18n="import.browse"></button>
+        <input id="file-input" type="file" accept=".mp3,.m4a,.wav,.ogg,.flac,.webm,.mp4,.aac,audio/*" multiple hidden />
+      </div>
+      <div id="jobs-import" class="jobs"></div>
+    </section>
+
+    <!-- ============ MEETING ============ -->
+    <section id="view-meeting" class="view">
+      <h1 data-i18n="meeting.title"></h1>
+      <p class="muted" data-i18n="meeting.desc"></p>
+      <div class="meeting-card">
+        <div id="meeting-idle">
+          <label class="check-row"><input id="meet-mic" type="checkbox" checked /> <span data-i18n="meeting.includeMic"></span></label>
+          <button id="btn-meet-start" class="btn record" data-i18n="meeting.start"></button>
+        </div>
+        <div id="meeting-live" hidden>
+          <div class="meet-live-row">
+            <span class="rec-dot"></span>
+            <span id="meet-timer">0:00</span>
+            <canvas id="meet-levels" width="220" height="36"></canvas>
+          </div>
+          <button id="btn-meet-stop" class="btn danger" data-i18n="meeting.stop"></button>
+        </div>
+        <p id="meeting-tip" class="muted small" data-i18n="meeting.tip"></p>
+      </div>
+      <div id="jobs-meeting" class="jobs"></div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="view-settings" class="view">
+      <h1 data-i18n="settings.title"></h1>
+
+      <div class="group">
+        <h2 data-i18n="settings.dictation"></h2>
+        <div class="row">
+          <label data-i18n="settings.hotkey"></label>
+          <button id="btn-hotkey" class="btn mono"></button>
+        </div>
+        <div class="row">
+          <label data-i18n="settings.hotkeyMode"></label>
+          <select id="set-hotkeyMode">
+            <option value="hold" data-i18n="settings.modeHold"></option>
+            <option value="toggle" data-i18n="settings.modeToggle"></option>
+          </select>
+        </div>
+        <div class="row" id="row-taplock">
+          <label data-i18n="settings.tapToLock"></label>
+          <input type="checkbox" id="set-tapToLock" class="switch" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.injectMode"></label>
+          <select id="set-injectMode">
+            <option value="paste" data-i18n="settings.injectPaste"></option>
+            <option value="type" data-i18n="settings.injectType"></option>
+            <option value="off" data-i18n="settings.injectOff"></option>
+          </select>
+        </div>
+        <div class="row">
+          <label data-i18n="settings.restoreClipboard"></label>
+          <input type="checkbox" id="set-restoreClipboard" class="switch" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.mic"></label>
+          <select id="set-micDeviceId"></select>
+        </div>
+        <div class="row">
+          <label data-i18n="settings.sounds"></label>
+          <input type="checkbox" id="set-sounds" class="switch" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.saveNotes"></label>
+          <input type="checkbox" id="set-saveDictationNotes" class="switch" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.saveAudio"></label>
+          <input type="checkbox" id="set-saveAudio" class="switch" />
+        </div>
+      </div>
+
+      <div class="group">
+        <h2 data-i18n="settings.transcription"></h2>
+        <div class="row">
+          <label data-i18n="settings.language"></label>
+          <select id="set-language"></select>
+        </div>
+        <div class="row">
+          <label data-i18n="settings.translate"></label>
+          <input type="checkbox" id="set-translate" class="switch" />
+        </div>
+        <div class="row col">
+          <label data-i18n="settings.prompt"></label>
+          <textarea id="set-initialPrompt" rows="2" data-i18n-ph="settings.promptPh"></textarea>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2 data-i18n="settings.models"></h2>
+        <div class="row">
+          <label data-i18n="settings.engineStatus"></label>
+          <span id="engine-status-text" class="mono small"></span>
+        </div>
+        <div class="row">
+          <label data-i18n="settings.flavor"></label>
+          <select id="set-engineFlavor">
+            <option value="cpu" data-i18n="settings.flavorCpu"></option>
+            <option value="cuda" data-i18n="settings.flavorCuda"></option>
+          </select>
+          <button id="btn-install-engine" class="btn" data-i18n="settings.installEngine"></button>
+        </div>
+        <div id="engine-install-progress" class="progress" hidden><div class="bar"></div><span class="pct"></span></div>
+        <div id="model-cards" class="model-cards"></div>
+      </div>
+
+      <div class="group">
+        <h2 data-i18n="settings.ai"></h2>
+        <p class="muted small" data-i18n="settings.aiDesc"></p>
+        <div class="row">
+          <label data-i18n="settings.aiEnabled"></label>
+          <input type="checkbox" id="set-ai-enabled" class="switch" />
+        </div>
+        <div class="row">
+          <label>Base URL</label>
+          <input type="text" id="set-ai-baseUrl" class="wide" placeholder="http://localhost:11434/v1" />
+        </div>
+        <div class="row">
+          <label>API Key</label>
+          <input type="password" id="set-ai-apiKey" class="wide" data-i18n-ph="settings.aiKeyPh" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.aiModel"></label>
+          <input type="text" id="set-ai-model" class="wide" placeholder="qwen3:4b" />
+          <button id="btn-ai-test" class="btn" data-i18n="settings.aiTest"></button>
+        </div>
+        <div id="ai-test-result" class="muted small"></div>
+      </div>
+
+      <div class="group">
+        <h2 data-i18n="settings.general"></h2>
+        <div class="row">
+          <label data-i18n="settings.uiLanguage"></label>
+          <select id="set-locale">
+            <option value="auto" data-i18n="settings.localeAuto"></option>
+            <option value="en">English</option>
+            <option value="zh-Hant">繁體中文</option>
+          </select>
+        </div>
+        <div class="row">
+          <label data-i18n="settings.launchAtLogin"></label>
+          <input type="checkbox" id="set-launchAtLogin" class="switch" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.closeToTray"></label>
+          <input type="checkbox" id="set-closeToTray" class="switch" />
+        </div>
+        <div class="row">
+          <label data-i18n="settings.threads"></label>
+          <input type="number" id="set-threads" min="0" max="32" step="1" />
+          <span class="muted small" data-i18n="settings.threadsAuto"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ONBOARDING ============ -->
+    <section id="view-onboarding" class="view">
+      <div class="ob-wrap">
+        <div class="ob-step" id="ob-1">
+          <img src="../../../assets/icon.png" width="72" height="72" alt="" />
+          <h1 data-i18n="ob.welcome"></h1>
+          <p class="muted" data-i18n="ob.welcomeDesc"></p>
+          <div class="row center-row">
+            <label data-i18n="settings.uiLanguage"></label>
+            <select id="ob-locale">
+              <option value="auto" data-i18n="settings.localeAuto"></option>
+              <option value="en">English</option>
+              <option value="zh-Hant">繁體中文</option>
+            </select>
+          </div>
+          <button class="btn primary big" id="ob-next-1" data-i18n="ob.next"></button>
+        </div>
+        <div class="ob-step" id="ob-2" hidden>
+          <h1 data-i18n="ob.setup"></h1>
+          <p class="muted" data-i18n="ob.setupDesc"></p>
+          <div class="ob-engine">
+            <div class="ob-line"><span data-i18n="ob.engine"></span><span id="ob-engine-state">…</span></div>
+            <div id="ob-engine-progress" class="progress" hidden><div class="bar"></div><span class="pct"></span></div>
+          </div>
+          <div id="ob-models" class="model-cards"></div>
+          <button class="btn primary big" id="ob-next-2" disabled data-i18n="ob.next"></button>
+        </div>
+        <div class="ob-step" id="ob-3" hidden>
+          <h1 data-i18n="ob.ready"></h1>
+          <p id="ob-ready-desc" class="muted"></p>
+          <textarea id="ob-try" rows="4" data-i18n-ph="ob.tryPh"></textarea>
+          <button class="btn primary big" id="ob-done" data-i18n="ob.finish"></button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="main.js"></script>
+</body>
+</html>

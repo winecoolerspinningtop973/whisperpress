@@ -1,0 +1,347 @@
+'use strict';
+const { app } = require('electron');
+const fs = require('fs');
+const os = require('os');
+const net = require('net');
+const path = require('path');
+const { spawn } = require('child_process');
+const { pipeline } = require('stream/promises');
+const { Readable } = require('stream');
+const { EventEmitter } = require('events');
+const config = require('./config');
+
+const WHISPER_CPP_VERSION = 'v1.8.6';
+const ENGINE_ZIPS = {
+  cpu: { name: 'whisper-blas-bin-x64.zip', sizeMB: 16 },
+  cuda: { name: 'whisper-cublas-12.4.0-bin-x64.zip', sizeMB: 439 },
+};
+const MODEL_BASE = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main';
+
+// id -> file is `ggml-<id>.bin` on Hugging Face (ggerganov/whisper.cpp)
+const MODELS = [
+  { id: 'tiny', sizeMB: 78, ram: '~0.4 GB', tier: 'fastest' },
+  { id: 'base', sizeMB: 148, ram: '~0.5 GB', tier: 'fast' },
+  { id: 'small', sizeMB: 488, ram: '~1.0 GB', tier: 'balanced' },
+  { id: 'medium-q5_0', sizeMB: 539, ram: '~1.2 GB', tier: 'accurate' },
+  { id: 'large-v3-turbo-q5_0', sizeMB: 574, ram: '~1.5 GB', tier: 'recommended' },
+  { id: 'large-v3-turbo', sizeMB: 1620, ram: '~2.5 GB', tier: 'accurate' },
+  { id: 'large-v3-q5_0', sizeMB: 1080, ram: '~2.5 GB', tier: 'max-quality' },
+];
+
+class Engine extends EventEmitter {
+  constructor() {
+    super();
+    this.root = path.join(app.getPath('userData'), 'engine');
+    this.modelDir = path.join(app.getPath('userData'), 'models');
+    fs.mkdirSync(this.root, { recursive: true });
+    fs.mkdirSync(this.modelDir, { recursive: true });
+    this.proc = null;
+    this.port = 0;
+    this.state = 'stopped'; // stopped | starting | ready | error
+    this.stateDetail = '';
+    this.downloads = new Map(); // key -> AbortController
+    this.startSeq = 0;
+    this.busy = false;
+  }
+
+  // ---------- paths / discovery ----------
+  flavorDir(flavor) { return path.join(this.root, flavor); }
+  findExe(name, flavor) {
+    const dir = this.flavorDir(flavor || config.get().engineFlavor);
+    if (!fs.existsSync(dir)) return null;
+    const stack = [dir];
+    while (stack.length) {
+      const d = stack.pop();
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) stack.push(p);
+        else if (e.name.toLowerCase() === name) return p;
+      }
+    }
+    return null;
+  }
+  modelPath(id) { return path.join(this.modelDir, `ggml-${id}.bin`); }
+  installedModels() {
+    return MODELS.filter((m) => fs.existsSync(this.modelPath(m.id))).map((m) => m.id);
+  }
+  getState() {
+    const flavor = config.get().engineFlavor;
+    return {
+      whisperCppVersion: WHISPER_CPP_VERSION,
+      engineInstalled: !!this.findExe('whisper-server.exe', flavor),
+      flavor,
+      models: MODELS.map((m) => ({ ...m, installed: fs.existsSync(this.modelPath(m.id)) })),
+      currentModel: config.get().model,
+      server: this.state,
+      serverDetail: this.stateDetail,
+      busy: this.busy,
+    };
+  }
+
+  _setState(s, detail = '') {
+    this.state = s;
+    this.stateDetail = detail;
+    this.emit('status', this.getState());
+  }
+
+  // ---------- downloads ----------
+  async _download(key, url, dest, totalHint) {
+    const ac = new AbortController();
+    this.downloads.set(key, ac);
+    const tmp = `${dest}.part`;
+    try {
+      const res = await fetch(url, { signal: ac.signal, redirect: 'follow' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+      const total = Number(res.headers.get('content-length')) || totalHint || 0;
+      let received = 0;
+      let lastEmit = 0;
+      const counter = new (require('stream').Transform)({
+        transform: (chunk, _enc, cb) => {
+          received += chunk.length;
+          const now = Date.now();
+          if (now - lastEmit > 150) {
+            lastEmit = now;
+            this.emit('progress', { key, received, total, pct: total ? Math.round((received / total) * 100) : -1 });
+          }
+          cb(null, chunk);
+        },
+      });
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      await pipeline(Readable.fromWeb(res.body), counter, fs.createWriteStream(tmp));
+      fs.renameSync(tmp, dest);
+      this.emit('progress', { key, received, total, pct: 100, done: true });
+    } catch (e) {
+      try { fs.unlinkSync(tmp); } catch { /* ignore */ }
+      this.emit('progress', { key, error: ac.signal.aborted ? 'cancelled' : String(e.message || e) });
+      throw e;
+    } finally {
+      this.downloads.delete(key);
+    }
+  }
+  cancelDownload(key) {
+    const ac = this.downloads.get(key);
+    if (ac) ac.abort();
+  }
+
+  async installEngine(flavor) {
+    flavor = flavor || config.get().engineFlavor;
+    const zip = ENGINE_ZIPS[flavor];
+    if (!zip) throw new Error(`unknown flavor ${flavor}`);
+    const url = `https://github.com/ggml-org/whisper.cpp/releases/download/${WHISPER_CPP_VERSION}/${zip.name}`;
+    const zipPath = path.join(this.root, zip.name);
+    await this._download(`engine:${flavor}`, url, zipPath, zip.sizeMB * 1024 * 1024);
+    // Expand-Archive is always available on Windows; avoids a JS unzip dependency.
+    const dir = this.flavorDir(flavor);
+    fs.rmSync(dir, { recursive: true, force: true });
+    await new Promise((resolve, reject) => {
+      const p = spawn('powershell.exe', [
+        '-NoProfile', '-NonInteractive', '-Command',
+        `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath '${dir.replace(/'/g, "''")}' -Force`,
+      ], { windowsHide: true });
+      let err = '';
+      p.stderr.on('data', (d) => { err += d; });
+      p.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`unzip failed: ${err}`))));
+      p.on('error', reject);
+    });
+    try { fs.unlinkSync(zipPath); } catch { /* ignore */ }
+    if (!this.findExe('whisper-server.exe', flavor)) throw new Error('whisper-server.exe not found in archive');
+    this.emit('status', this.getState());
+  }
+
+  async downloadModel(id) {
+    const m = MODELS.find((x) => x.id === id);
+    if (!m) throw new Error(`unknown model ${id}`);
+    await this._download(`model:${id}`, `${MODEL_BASE}/ggml-${id}.bin`, this.modelPath(id), m.sizeMB * 1024 * 1024);
+    this.emit('status', this.getState());
+  }
+  deleteModel(id) {
+    if (config.get().model === id && this.proc) this.stop();
+    try { fs.unlinkSync(this.modelPath(id)); } catch { /* ignore */ }
+    this.emit('status', this.getState());
+  }
+
+  // ---------- server lifecycle ----------
+  _threads() {
+    const t = config.get().threads;
+    if (t > 0) return t;
+    return Math.max(2, Math.min(8, Math.floor(os.cpus().length / 2)));
+  }
+  async _freePort() {
+    return new Promise((resolve, reject) => {
+      const srv = net.createServer();
+      srv.listen(0, '127.0.0.1', () => {
+        const { port } = srv.address();
+        srv.close(() => resolve(port));
+      });
+      srv.on('error', reject);
+    });
+  }
+
+  async start() {
+    const seq = ++this.startSeq;
+    this.stop();
+    const cfg = config.get();
+    const exe = this.findExe('whisper-server.exe');
+    const modelId = cfg.model;
+    if (!exe) { this._setState('stopped', 'no-engine'); return false; }
+    if (!modelId || !fs.existsSync(this.modelPath(modelId))) { this._setState('stopped', 'no-model'); return false; }
+
+    this._setState('starting', modelId);
+    this.port = await this._freePort();
+    if (seq !== this.startSeq) return false;
+
+    const args = [
+      '-m', this.modelPath(modelId),
+      '--host', '127.0.0.1',
+      '--port', String(this.port),
+      '-t', String(this._threads()),
+      '-l', cfg.language || 'auto',
+    ];
+    if (cfg.translate) args.push('-tr');
+    if (cfg.initialPrompt) args.push('--prompt', cfg.initialPrompt);
+
+    const proc = spawn(exe, args, { cwd: path.dirname(exe), windowsHide: true });
+    this.proc = proc;
+    let stderrTail = '';
+    proc.stderr.on('data', (d) => { stderrTail = (stderrTail + d.toString()).slice(-2000); });
+    proc.stdout.on('data', () => { /* drain */ });
+    proc.on('exit', (code) => {
+      if (this.proc === proc) {
+        this.proc = null;
+        if (this.state !== 'stopped') this._setState('error', `server exited (${code})\n${stderrTail.slice(-400)}`);
+      }
+    });
+    proc.on('error', (e) => {
+      if (this.proc === proc) { this.proc = null; this._setState('error', String(e.message)); }
+    });
+
+    // wait until the HTTP server accepts connections (model is loaded before listen)
+    const deadline = Date.now() + 120000;
+    while (Date.now() < deadline) {
+      if (seq !== this.startSeq || this.proc !== proc) return false;
+      try {
+        await fetch(`http://127.0.0.1:${this.port}/`, { method: 'GET' });
+        this._setState('ready', modelId);
+        return true;
+      } catch { await new Promise((r) => setTimeout(r, 300)); }
+    }
+    this._setState('error', 'server start timeout');
+    this.stop();
+    return false;
+  }
+
+  stop() {
+    if (this.proc) {
+      const p = this.proc;
+      this.proc = null;
+      try { p.kill(); } catch { /* ignore */ }
+    }
+    if (this.state !== 'stopped') this._setState('stopped', this.stateDetail === 'no-engine' ? 'no-engine' : '');
+  }
+
+  // ---------- transcription (short clips, warm server) ----------
+  async transcribe(wavBuffer, opts = {}) {
+    if (this.state !== 'ready') {
+      const ok = await this.start();
+      if (!ok) throw new Error('engine-not-ready');
+    }
+    const cfg = config.get();
+    const fd = new FormData();
+    fd.append('file', new Blob([wavBuffer], { type: 'audio/wav' }), 'audio.wav');
+    fd.append('response_format', 'verbose_json');
+    fd.append('temperature', '0.0');
+    fd.append('temperature_inc', '0.2');
+    const lang = opts.language || cfg.language || 'auto';
+    if (lang && lang !== 'auto') fd.append('language', lang);
+    const res = await fetch(`http://127.0.0.1:${this.port}/inference`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(`inference failed: HTTP ${res.status} ${(await res.text()).slice(0, 300)}`);
+    const j = await res.json();
+    if (j.error) throw new Error(`inference failed: ${j.error}`);
+    const segments = Array.isArray(j.segments)
+      ? j.segments.map((s) => ({ t0: Math.round((s.start || 0) * 1000), t1: Math.round((s.end || 0) * 1000), text: (s.text || '').trim() }))
+      : null;
+    return { text: (j.text || '').trim(), segments, language: j.language || lang };
+  }
+
+  // ---------- transcription (long files, streaming CLI) ----------
+  // onSegment({t0,t1,text}), onProgress(pct). Returns {text, segments, language}.
+  async transcribeFile(wavPath, opts = {}, onSegment, onProgress) {
+    const cli = this.findExe('whisper-cli.exe');
+    if (!cli) throw new Error('engine-not-ready');
+    const cfg = config.get();
+    const modelId = cfg.model;
+    if (!modelId || !fs.existsSync(this.modelPath(modelId))) throw new Error('engine-not-ready');
+    const outBase = path.join(os.tmpdir(), `whisperpress-${Date.now()}`);
+    const lang = opts.language || cfg.language || 'auto';
+    const args = [
+      '-m', this.modelPath(modelId),
+      '-f', wavPath,
+      '-l', lang,
+      '-t', String(this._threads()),
+      '-oj', '-of', outBase,
+      '-pp', '-np',
+    ];
+    if (cfg.translate) args.push('-tr');
+    if (cfg.initialPrompt) args.push('--prompt', cfg.initialPrompt);
+
+    return new Promise((resolve, reject) => {
+      const proc = spawn(cli, args, { cwd: path.dirname(cli), windowsHide: true });
+      this.cliProc = proc;
+      const segRe = /\[(\d{2}):(\d{2}):(\d{2})[.,](\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2})[.,](\d{3})\]\s?(.*)/;
+      const progRe = /progress\s*=\s*(\d+)%/g;
+      const scanProgress = (s) => {
+        let m, last = -1;
+        while ((m = progRe.exec(s))) last = +m[1];
+        if (last >= 0 && onProgress) onProgress(last);
+      };
+      let buf = '';
+      proc.stdout.on('data', (d) => {
+        buf += d.toString('utf8');
+        let i;
+        while ((i = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, i).trim();
+          buf = buf.slice(i + 1);
+          const m = segRe.exec(line);
+          if (m && onSegment) {
+            const t0 = (+m[1] * 3600 + +m[2] * 60 + +m[3]) * 1000 + +m[4];
+            const t1 = (+m[5] * 3600 + +m[6] * 60 + +m[7]) * 1000 + +m[8];
+            onSegment({ t0, t1, text: m[9].trim() });
+          } else {
+            scanProgress(line);
+          }
+        }
+      });
+      let stderrTail = '';
+      proc.stderr.on('data', (d) => {
+        const s = d.toString('utf8');
+        stderrTail = (stderrTail + s).slice(-2000);
+        scanProgress(s);
+      });
+      proc.on('error', reject);
+      proc.on('exit', (code) => {
+        this.cliProc = null;
+        if (code !== 0) return reject(new Error(`whisper-cli exited ${code}: ${stderrTail.slice(-400)}`));
+        try {
+          const j = JSON.parse(fs.readFileSync(`${outBase}.json`, 'utf8'));
+          try { fs.unlinkSync(`${outBase}.json`); } catch { /* ignore */ }
+          const segments = (j.transcription || []).map((s) => ({
+            t0: s.offsets ? s.offsets.from : 0,
+            t1: s.offsets ? s.offsets.to : 0,
+            text: (s.text || '').trim(),
+          }));
+          resolve({
+            text: segments.map((s) => s.text).join('\n').trim(),
+            segments,
+            language: (j.result && j.result.language) || lang,
+          });
+        } catch (e) { reject(e); }
+      });
+    });
+  }
+  cancelFileTranscription() {
+    if (this.cliProc) { try { this.cliProc.kill(); } catch { /* ignore */ } this.cliProc = null; }
+  }
+}
+
+module.exports = new Engine();
+module.exports.MODELS = MODELS;

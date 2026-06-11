@@ -1,0 +1,51 @@
+{
+  "name": "whisperpress",
+  "productName": "WhisperPress",
+  "version": "0.1.0",
+  "description": "Hold a key, speak, and watch your words appear — fully offline voice typing & voice notes for Windows, powered by Whisper.",
+  "main": "src/main/main.js",
+  "author": "WhisperPress contributors",
+  "license": "MIT",
+  "homepage": "https://github.com/whisperpress/whisperpress",
+  "scripts": {
+    "start": "electron .",
+    "icons": "node scripts/gen-icons.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "uiohook-napi": "^1.5.5"
+  },
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "app.whisperpress",
+    "productName": "WhisperPress",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/uiohook-napi/**"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "assets/app.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}
