@@ -37,7 +37,8 @@ Press and hold a hotkey (default **F9**), talk, release — your speech is trans
 | ✦ **AI summaries & Q&A** | Optional. Point it at any OpenAI-compatible endpoint — e.g. local [Ollama](https://ollama.com) to stay offline. |
 | ⏱ **Timestamped export** | Export notes as `.txt`, `.md`, or `.srt` subtitles. |
 | 🔒 **Private by architecture** | Models run on your CPU/GPU via whisper.cpp. Notes are plain JSON on your disk. |
-| 🪶 **Custom vocabulary** | Initial-prompt hints for names, jargon, and output style (e.g. Traditional Chinese). |
+| 🪶 **Custom vocabulary** | Initial-prompt hints for names, jargon, and output style. |
+| 💻 **Hardware-aware setup** | Detects your CPU / RAM / NVIDIA GPU and applies the best engine + model in one click. |
 
 ## Download
 

@@ -85,7 +85,7 @@
   "settings.tapToLock": "軽くタップで録音をロック",
   "settings.injectMode": "テキスト入力方式",
   "settings.injectPaste": "貼り付け（高速・推奨）",
-  "settings.injectType": "1 文字ずつ入力",
+  "settings.injectType": "1 文字ずつ入力（貼り付けを拒否するアプリ向け）",
   "settings.injectOff": "クリップボードのみ（自動入力しない）",
   "settings.restoreClipboard": "貼り付け後にクリップボードを復元",
   "settings.restoreClipboardTip": "貼り付けモードは一時的にクリップボードを認識テキストで上書きします。オンにすると貼り付け完了の約 0.35 秒後に元の内容を自動で戻すため、コピーしていたものが失われません。\n制限：復元されるのはテキストのみで、画像やファイルは復元されません。\nオフの場合、認識テキストがクリップボードに残り、あちこちに貼り付けられます。",

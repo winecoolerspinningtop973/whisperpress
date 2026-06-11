@@ -85,7 +85,7 @@
   "settings.tapToLock": "Quick tap locks recording",
   "settings.injectMode": "Insert text by",
   "settings.injectPaste": "Pasting (fast, recommended)",
-  "settings.injectType": "Typing each character",
+  "settings.injectType": "Typing each character (for apps that block paste)",
   "settings.injectOff": "Clipboard only (no auto-insert)",
   "settings.restoreClipboard": "Restore clipboard after pasting",
   "settings.restoreClipboardTip": "Paste mode briefly replaces your clipboard with the transcript. When enabled, your previous clipboard content is put back ~0.35 s after pasting, so nothing you copied gets lost.\nLimitation: only text is restored — images and files are not.\nWhen disabled, the transcript stays on the clipboard for pasting elsewhere.",
