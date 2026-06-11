@@ -112,6 +112,7 @@
   "settings.engineStatus": "引擎狀態",
   "settings.hwTitle": "硬體建議",
   "settings.hwApply": "套用建議",
+  "settings.hwApplied": "已是建議組合",
   "settings.hwError": "套用硬體建議失敗",
   "settings.flavor": "運算方式",
   "settings.flavorCpu": "CPU（所有電腦皆可）",
@@ -151,6 +152,7 @@
   "engine.installError": "引擎安裝失敗",
 
   "models.recommended": "推薦",
+  "models.hwRecommended": "硬體建議",
   "models.inUse": "使用中",
   "models.use": "使用",
   "models.delete": "刪除",

@@ -112,6 +112,7 @@
   "settings.engineStatus": "エンジンの状態",
   "settings.hwTitle": "ハードウェア推奨",
   "settings.hwApply": "適用",
+  "settings.hwApplied": "推奨構成を使用中",
   "settings.hwError": "推奨設定の適用に失敗しました",
   "settings.flavor": "演算方式",
   "settings.flavorCpu": "CPU（どの PC でも動作）",
@@ -151,6 +152,7 @@
   "engine.installError": "エンジンのインストールに失敗しました",
 
   "models.recommended": "おすすめ",
+  "models.hwRecommended": "この PC に最適",
   "models.inUse": "使用中",
   "models.use": "使う",
   "models.delete": "削除",

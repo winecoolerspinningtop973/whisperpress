@@ -675,11 +675,17 @@ async function loadHwRecommendation() {
   $('#hw-line').title = line;
   $('#ob-hw').textContent = `💻 ${line}`;
   updateHwApply();
+  renderModelCards(); // show the hardware badge on the recommended card
 }
 function updateHwApply() {
   if (!hwInfo) return;
   const r = hwInfo.recommend;
-  $('#btn-hw-apply').hidden = settings.engineFlavor === r.flavor && settings.model === r.model;
+  const btn = $('#btn-hw-apply');
+  const matches = settings.engineFlavor === r.flavor && settings.model === r.model;
+  btn.hidden = false;
+  btn.disabled = matches;
+  btn.classList.toggle('primary', !matches);
+  btn.textContent = matches ? `✓ ${t('settings.hwApplied')}` : t('settings.hwApply');
 }
 $('#btn-hw-apply').addEventListener('click', async () => {
   if (!hwInfo) return;
@@ -718,7 +724,7 @@ function renderModelCards() {
       const card = document.createElement('div');
       card.className = 'model-card' + (selected ? ' selected' : '');
       card.innerHTML = `
-        <div class="mc-name">${m.id}${m.tier === 'recommended' ? `<span class="mc-badge">${t('models.recommended')}</span>` : ''}</div>
+        <div class="mc-name">${m.id}${m.tier === 'recommended' ? `<span class="mc-badge">${t('models.recommended')}</span>` : ''}${hwInfo && hwInfo.recommend.model === m.id ? `<span class="mc-badge hw-badge">💻 ${t('models.hwRecommended')}</span>` : ''}</div>
         <div class="mc-info">${m.sizeMB} MB · RAM ${m.ram} · ${t(`models.tier.${m.tier}`)}</div>
         <div class="progress" data-prog="model:${m.id}" ${downloading ? '' : 'hidden'}><div class="bar"></div><span class="pct"></span></div>
         <div class="mc-actions">

@@ -112,6 +112,7 @@
   "settings.engineStatus": "Engine status",
   "settings.hwTitle": "Hardware recommendation",
   "settings.hwApply": "Apply",
+  "settings.hwApplied": "Recommended setup active",
   "settings.hwError": "Could not apply the recommendation",
   "settings.flavor": "Compute",
   "settings.flavorCpu": "CPU (works everywhere)",
@@ -151,6 +152,7 @@
   "engine.installError": "Engine install failed",
 
   "models.recommended": "Recommended",
+  "models.hwRecommended": "For your hardware",
   "models.inUse": "In use",
   "models.use": "Use",
   "models.delete": "Delete",
