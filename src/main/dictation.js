@@ -7,14 +7,21 @@ const notes = require('./notes');
 const windows = require('./windows');
 
 // Strip non-speech artifacts whisper emits for silence/noise: [BLANK_AUDIO], (music), ♪ …
+// and merge whisper's per-segment line breaks: dictation should come out as ONE line
+// (a stray Enter in type mode would even submit chat messages). CJK joins directly,
+// Latin gets a space between segments.
 function cleanTranscript(text) {
-  return text
+  const lines = text
     .split('\n')
     .map((l) => l.replace(/[\[(][^\])]{0,40}[\])]/g, (m) => (/[a-zA-Z_ ]+|音樂|雜音|掌聲/.test(m.slice(1, -1)) && m.length < 30 ? '' : m)).trim())
-    .filter(Boolean)
-    .join('\n')
-    .replace(/[ \t]+/g, ' ')
-    .trim();
+    .filter(Boolean);
+  const CJK = /[　-鿿＀-￯]/;
+  let out = '';
+  for (const l of lines) {
+    if (!out) out = l;
+    else out += CJK.test(out[out.length - 1]) || CJK.test(l[0]) ? l : ` ${l}`;
+  }
+  return out.replace(/[ \t]+/g, ' ').trim();
 }
 
 class Dictation extends EventEmitter {
