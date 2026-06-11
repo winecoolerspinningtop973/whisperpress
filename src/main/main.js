@@ -52,10 +52,28 @@ function bootstrap() {
 
     if (config.get().onboarded && config.get().model) engine.start();
 
+    // default initial prompt follows the UI language — but never overwrite a
+    // prompt the user customized (only empty or one of our known defaults)
+    const DEFAULT_PROMPTS = {
+      'zh-Hant': '以下是繁體中文的逐字稿：',
+      ja: '以下は日本語の文字起こしです。',
+      en: '',
+    };
+    function syncLocaleDefaults(data) {
+      const def = DEFAULT_PROMPTS[i18n.resolveLocale()] ?? '';
+      const known = Object.values(DEFAULT_PROMPTS).filter(Boolean);
+      const cur = data.initialPrompt || '';
+      const patch = {};
+      if ((!cur || known.includes(cur)) && cur !== def) patch.initialPrompt = def;
+      if (i18n.resolveLocale() === 'zh-Hant' && data.chineseVariant === 'auto') patch.chineseVariant = 'traditional';
+      if (Object.keys(patch).length) config.set(patch);
+    }
+
     config.on('changed', (data, patch) => {
       if ('launchAtLogin' in patch) {
         app.setLoginItemSettings({ openAtLogin: !!data.launchAtLogin, path: process.execPath, args: [app.getAppPath()] });
       }
+      if ('locale' in patch || ('onboarded' in patch && data.onboarded)) syncLocaleDefaults(data);
       const engineKeys = ['language', 'translate', 'initialPrompt', 'threads', 'model', 'engineFlavor'];
       if (engineKeys.some((k) => k in patch) && data.model) engine.start();
       windows.broadcast('settings:changed', data);

@@ -17,6 +17,7 @@ function resolveLocale() {
   if (pref && pref !== 'auto' && dicts[pref]) return pref;
   const sys = (app.getLocale() || 'en').toLowerCase();
   if (sys.startsWith('zh')) return 'zh-Hant';
+  if (sys.startsWith('ja')) return 'ja';
   return 'en';
 }
 

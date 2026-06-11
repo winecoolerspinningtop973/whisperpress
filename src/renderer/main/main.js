@@ -754,11 +754,8 @@ async function startOnboarding() {
     $('#ob-ready-desc').textContent = t('ob.readyDesc', { key: hotkeyLabel() });
   });
   $('#ob-done').addEventListener('click', async () => {
-    const patch = { onboarded: true };
-    const loc = dict['__locale'] || '';
-    if (loc === 'zh-Hant' && !settings.initialPrompt) patch.initialPrompt = '以下是繁體中文的逐字稿：';
-    if (loc === 'zh-Hant' && settings.chineseVariant === 'auto') patch.chineseVariant = 'traditional';
-    settings = await wp.setSettings(patch);
+    // locale-dependent defaults (initial prompt, Chinese variant) are applied in the main process
+    settings = await wp.setSettings({ onboarded: true });
     await wp.restartEngine();
     showView('notes');
   });
