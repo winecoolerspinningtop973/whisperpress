@@ -74,6 +74,9 @@ function bootstrap() {
         app.setLoginItemSettings({ openAtLogin: !!data.launchAtLogin, path: process.execPath, args: [app.getAppPath()] });
       }
       if ('locale' in patch || ('onboarded' in patch && data.onboarded)) syncLocaleDefaults(data);
+      if ('locale' in patch && windows.overlay) {
+        windows.overlay.webContents.send('overlay:cmd', { cmd: 'localeChanged' });
+      }
       const engineKeys = ['language', 'translate', 'initialPrompt', 'threads', 'model', 'engineFlavor'];
       if (engineKeys.some((k) => k in patch) && data.model) engine.start();
       windows.broadcast('settings:changed', data);

@@ -138,7 +138,9 @@ let currentKey = 'F9';
 
 wp.onCmd(async (payload) => {
   const { cmd } = payload;
-  if (cmd === 'start') {
+  if (cmd === 'localeChanged') {
+    wp.dict().then((d) => { dict = d.strings; });
+  } else if (cmd === 'start') {
     soundsOn = payload.sounds !== false;
     currentMode = payload.mode || 'hold';
     currentKey = payload.hotkeyLabel || 'F9';
